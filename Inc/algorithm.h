@@ -10,6 +10,5 @@ int get_divLine(double fre);
 int get_freLog(void);
 int get_divLog(double fre);
 int fft(float *src, Complex *dst, int size_n);
-void parseAdData(float *input,const u8 *source);
 
 #endif // !_ALGORITHM_H_

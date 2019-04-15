@@ -27,6 +27,7 @@
 #include "types.h"
 #include "usart.h"
 #include "msg.h"
+#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,7 +37,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -60,6 +61,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi3;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart1;
@@ -181,6 +184,62 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI line0 interrupt.
+  */
+void EXTI0_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
+
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
+
+  /* USER CODE END EXTI0_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line1 interrupt.
+  */
+void EXTI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line2 interrupt.
+  */
+void EXTI2_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI2_IRQn 0 */
+
+  /* USER CODE END EXTI2_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  /* USER CODE BEGIN EXTI2_IRQn 1 */
+
+  /* USER CODE END EXTI2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPI1 global interrupt.
+  */
+void SPI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI1_IRQn 0 */
+
+  /* USER CODE END SPI1_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi1);
+  /* USER CODE BEGIN SPI1_IRQn 1 */
+
+  /* USER CODE END SPI1_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART1 global interrupt.
   */
 void USART1_IRQHandler(void)
@@ -229,6 +288,20 @@ void USART3_IRQHandler(void)
   /* USER CODE BEGIN USART3_IRQn 1 */
 
   /* USER CODE END USART3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPI3 global interrupt.
+  */
+void SPI3_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI3_IRQn 0 */
+
+  /* USER CODE END SPI3_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi3);
+  /* USER CODE BEGIN SPI3_IRQn 1 */
+
+  /* USER CODE END SPI3_IRQn 1 */
 }
 
 /**

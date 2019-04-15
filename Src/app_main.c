@@ -16,6 +16,7 @@
 #include "led.h"
 #include "timer.h"
 #include "spi_dds.h"
+#include "spi_fpga.h"
 
 extern osMessageQId mainQueueHandle;
 extern IWDG_HandleTypeDef hiwdg;
@@ -42,7 +43,7 @@ static int main_usart3Recv(const TASK_MSG *msg)
 {
     LOG_DEBUG("usart3 recieve %d bytes", msg->length);
     // LOG_HEX((char *)msg->data, msg->length);
-    uart_fpga_input(msg->data, msg->length);
+    // uart_fpga_input(msg->data, msg->length);
     return F_SUCCESS;
 }
 
@@ -58,43 +59,46 @@ static int main_usart5Recv(const TASK_MSG *msg)
 {
     LOG_DEBUG("usart5 recieve %d bytes", msg->length);
     // LOG_HEX((char *)msg->data, msg->length);
-    uart_fpga_output(msg->data, msg->length);
+    // uart_fpga_output(msg->data, msg->length);
     return F_SUCCESS;
 }
 
-//急停按下
-static int main_key0Press(void)
+static int main_spi1Recv(const TASK_MSG *msg)
 {
-    LOG_DEBUG("key 0 pressed");
-    modem_clearQueue();
-    data_setIsStart(L_FALSE);
-    data_setIsScram(L_TRUE);
-    //断开测量端的电
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+    // LOG_DEBUG("Spi fpga recv");
+    parsSpiFpgaData(msg->data);
     return F_SUCCESS;
 }
 
-//急停释放
-static int main_key0Release(void)
+static int main_spi3Recv(const TASK_MSG *msg)
 {
-    LOG_DEBUG("key 0 release");
-    data_setIsScram(L_FALSE);
+    // LOG_DEBUG("Spi dds recv");
+    parsSpiDdsData();
     return F_SUCCESS;
 }
 
-static int main_key1Press(void)
+static int main_gpioExitRising0(const TASK_MSG *msg)
 {
-    LOG_DEBUG("key 1 pressed");
-    if (L_FALSE == data_isStart())
-    {
-        msg_sendCmd(APP_MODEM, MEASURE_START);
-    }
-    else
-    {
-        modem_clearQueue();
-        data_setIsStart(L_FALSE);
-    }
+    // LOG_DEBUG("Fpga START_1");
+    msg_sendCmd(APP_MODEM, START_SEND);
+    return F_SUCCESS;
+}
 
+static int main_gpioExitFalling0(const TASK_MSG *msg)
+{
+    // LOG_DEBUG("Fpga START_0");
+    return F_SUCCESS;
+}
+
+static int main_gpioExitRising1(const TASK_MSG *msg)
+{
+    // LOG_DEBUG("Fpga RST_1");
+    return F_SUCCESS;
+}
+
+static int main_gpioExitFalling1(const TASK_MSG *msg)
+{
+    // LOG_DEBUG("Fpga RST_0");
     return F_SUCCESS;
 }
 
@@ -102,28 +106,14 @@ static int main_keyChange(const TASK_MSG *msg) {
     const KEY_MSG *key_msg = (const KEY_MSG *)msg->data;
 
     LOG_DEBUG("Key %d changed to %d", key_msg->key, key_msg->state);
-    if (key_msg->key == KEY_UP) {
-        if (key_msg->state == KEY_PRESS) {
-            return main_key0Press();
-        } else {
-            return main_key0Release();
-        }
-    }
-
-    if (key_msg->key == KEY_1) {
-        if (key_msg->state == KEY_PRESS) {
-            return main_key1Press();
-        } else {
-        
-        }
-    }
 
     return F_SUCCESS;
 }
 
 static int main_feedDog(const TASK_MSG *msg)
 {
-    LOG_DEBUG("feed dog, wang!!!");
+    // LOG_DEBUG("feed dog, wang!!!");
+    // spi_fpga_printStatus();
     HAL_IWDG_Refresh(&hiwdg);
     return F_SUCCESS;
 }
@@ -135,15 +125,20 @@ static TASK_MSG_MAP main_msgMap[] =
     {USART3_RECV,               main_usart3Recv},
     {USART4_RECV,               main_usart4Recv},
     {USART5_RECV,               main_usart5Recv},
+    {SPI1_RECV,                 main_spi1Recv},
+    {SPI3_RECV,                 main_spi3Recv},
+    {GPIO_EXIT_RISING_0,        main_gpioExitRising0},
+    {GPIO_EXIT_FALLING_0,       main_gpioExitFalling0},
+    {GPIO_EXIT_RISING_1,        main_gpioExitRising1},
+    {GPIO_EXIT_FALLING_1,       main_gpioExitFalling1},
     {KEY_CHANGE,                main_keyChange},
     {FEED_DOG,                  main_feedDog},
 };
 
 int stm32_init(void)
 {
-    LOG_DEBUG("stm32f405vgt6 version: "VERSION_STR);
+    LOG_DEBUG("stm32f103zet6 version: "VERSION_STR);
     usart_init();
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
     return F_SUCCESS;
 }
 
@@ -162,7 +157,7 @@ void app_main(void const * argument)
     //初始化硬件
     LOG_INFO("Init hardware");
     led_checkStart();
-    dds_waveSeting(0, 0, SIN_WAVE, 0);
+    // dds_waveSeting(0, 0, SIN_WAVE, 0);
     //定时开启看门狗
     timer_start(TIMER_WATCHDOG, 1000, watchdogTimerCb);
     //检查flash情况
@@ -186,10 +181,11 @@ void app_main(void const * argument)
     data_initData();
 
     LOG_DEBUG("task main start");
+    spi_fpga_recvStart();
+    spi_dds_recvStart();
     while(1)
     {
         xQueueReceive(mainQueueHandle, &pMsg, portMAX_DELAY);
         msg_msgProc(pMsg, main_msgMap, sizeof(main_msgMap) / sizeof(main_msgMap[0]));
     }
 }
-

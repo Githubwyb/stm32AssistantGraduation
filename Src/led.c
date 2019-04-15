@@ -33,8 +33,8 @@ int led_write(LED_ENUM led, DEVICE_STATE state)
 
 int leds_write(u8 state)
 {
-    HAL_GPIO_WritePin(GPIOC, state, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOC, ~state, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, state, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, ~state, GPIO_PIN_SET);
 
     return F_SUCCESS;
 }
@@ -73,7 +73,7 @@ static int led_timer_endCb(void)
 int led_end(void)
 {
     led_write(LED_1, ON);
-    dds_waveSeting(0, 0, SIN_WAVE, 0);
+    // dds_waveSeting(0, 0, SIN_WAVE, 0);
     timer_stop(TIMER_LED_BUZZER);
     timer_start(TIMER_LED_BUZZER, 500, led_timer_endCb);
     return F_SUCCESS;
@@ -94,26 +94,26 @@ int led_checkStart(void)
 
 static int led_timer_delayCb(void)
 {
-    led_write(LED_0, ON);
+    led_write(LED_1, OFF);
     return F_SUCCESS;
 }
 
 int led_delay(u32 count)
 {
-    led_write(LED_0, OFF);
+    led_write(LED_1, ON);
     timer_start(TIMER_LED_BUZZER, count, led_timer_delayCb);
     return F_SUCCESS;
 }
 
 static int led_timer_checkEndCb(void)
 {
-    led_write(LED_0, OFF);
+    led_write(LED_0, ON);
     return F_SUCCESS;
 }
 
 int led_checkEnd(void)
 {
-    led_write(LED_0, ON);
+    led_write(LED_0, OFF);
     timer_stop(TIMER_LED_BUZZER);
     timer_start(TIMER_LED_BUZZER, 500, led_timer_checkEndCb);
     return F_SUCCESS;

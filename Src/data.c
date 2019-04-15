@@ -208,7 +208,7 @@ int data_resetOutputResult(void)
 }
 
 
-u32 data_ntohl(u8 *data)
+u32 data_ntohl(const u8 *data)
 {
     u32 temp = 0;
     temp = data[0];
@@ -219,7 +219,7 @@ u32 data_ntohl(u8 *data)
     return temp;
 }
 
-u16 data_ntohs(u8 *data)
+u16 data_ntohs(const u8 *data)
 {
     u16 temp = 0;
     temp = data[0];

@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-int uart_fpga_input(const u8 *data, u16 length);
-int uart_fpga_output(const u8 *data, u16 length);
+int uart_fpga_inputSend(void);
+int uart_fpga_outputSend(void);
 
 #endif // !_UART_FPGA_H_

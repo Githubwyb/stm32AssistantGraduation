@@ -1,64 +1,56 @@
 #include "spi_fpga.h"
 
 #include "stm32f1xx_hal.h"
-#include "cmsis_os.h"
 
 #include "log.h"
 #include "data.h"
-#include "timer.h"
+#include "msg.h"
+#include "spi_dds.h"
 
-#define FPGA_SPI_CS_ENABLE HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET)
-#define FPGA_SPI_CS_DISABLE HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET)
+extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi3;
 
-#define FPGA_START_0 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET)
-#define FPGA_START_1 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET)
+static u8 spiFpgaRecvData[4];
 
-#define FPGA_RST_0 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET)
-#define FPGA_RST_1 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET)
-
-extern SPI_HandleTypeDef hspi2;
-
-int fpga_sendData(u8 *data, u16 length)
-{
-    int rc = 0;
-
-    FPGA_SPI_CS_ENABLE;
-    rc = HAL_SPI_Transmit(&hspi2, data, length, 50);
-    FPGA_SPI_CS_DISABLE;
-    PRINT("send to fpga: ");
-    LOG_BIN(data, length);
-
-    return rc;
+int spi_fpga_recvStart(void) {
+    HAL_SPI_Receive_IT(&hspi1, spiFpgaRecvData, 4);
+    return F_SUCCESS;
 }
 
-int fpga_writeDivFre(u32 divFre)
-{
-    u8 sendData[4] = {0};
-
-    data_htonl(divFre, sendData);
-
-    return fpga_sendData(sendData, 4);
+int spi_fpga_printStatus(void) {
+    LOG_DEBUG("RxXferCount %d", hspi1.RxXferCount);
+    LOG_HEX(spiFpgaRecvData, sizeof(spiFpgaRecvData));
+    return F_SUCCESS;
 }
 
-int fpga_start(void)
-{
-    FPGA_RST_0;
-    timer_start(TIMER_FPGA_TIMEOUT, 2, NULL);
-    while(L_TRUE == timer_isTimerStart(TIMER_FPGA_TIMEOUT))
-    {
-        osDelay(1);
+int parsSpiFpgaData(const u8 *data) {
+    u32 divFre = 0;
+    float fpgaFre = 0;
+
+    // LOG_DEBUG("Spi fpga recv:");
+    // LOG_BIN(spiFpgaRecvData, sizeof(spiFpgaRecvData));
+
+    divFre = data_ntohl(data);
+    if (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_3)) {
+        fpgaFre = FPGA_SYSTEM_TICK / 1.0 / divFre;
+    } else {
+        fpgaFre = FPGA_SYSTEM_TICK_1 / 1.0 / divFre;
     }
-    FPGA_RST_1;
-
-    FPGA_START_1;
-
+    LOG_DEBUG("Fpga recv divFre %d, fre %.4f", divFre, fpgaFre);
+    // spi_fpga_recvStart();
     return F_SUCCESS;
 }
 
-int fpga_end(void)
-{
-    FPGA_START_0;
-    FPGA_RST_0;
-
+int spi_fpgaRecv_IT(void) {
+    msg_sendData(APP_MAIN, SPI1_RECV, spiFpgaRecvData, 4);
+    spi_fpga_recvStart();
     return F_SUCCESS;
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+    if (hspi == &hspi1) {
+        msg_sendCoreCmd(CORE_SPI1_RECV);
+    } else if (hspi == &hspi3) {
+        msg_sendCoreCmd(CORE_SPI3_RECV);
+    }
 }

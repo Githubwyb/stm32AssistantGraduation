@@ -37,10 +37,10 @@ int key_detectProc(void)
         }
         else
         {
-            key_map[0].p++;
-            if(key_map[0].p == 2)
+            key_map[i].p++;
+            if(key_map[i].p == 2)
             {
-                key_map[0].r = 0;
+                key_map[i].r = 0;
                 key_msg.key = (KEY_ENUM)i;
                 key_msg.state = KEY_PRESS;
                 msg_sendData(APP_MAIN, KEY_CHANGE, &key_msg, sizeof(key_msg));

@@ -401,6 +401,8 @@ static int cmd_size(const unsigned char *cmdString, unsigned short length)
 
 static int cmd_led(const unsigned char *cmdString, unsigned short length)
 {
+    int rc = 0;
+    int temp = 0;
     if (strncmp((const char *)cmdString, "led blink", strlen("led blink")) == 0)
     {
         LOG_DEBUG("led blink");
@@ -412,6 +414,14 @@ static int cmd_led(const unsigned char *cmdString, unsigned short length)
     {
         LOG_DEBUG("led eliminate");
         led_end();
+        return F_SUCCESS;
+    }
+
+    rc = sscanf((char *)cmdString, "led write %d", &temp);
+    if (rc == 1)
+    {
+        LOG_DEBUG("led write to %d", temp);
+        leds_write((u8)temp);
         return F_SUCCESS;
     }
 
@@ -448,32 +458,32 @@ static int cmd_dog(const unsigned char *cmdString, unsigned short length)
 
 static int cmd_fpga(const unsigned char *cmdString, unsigned short length)
 {
-    if (strncmp((const char *)cmdString, "fpga send data: ", strlen("fpga send data: ")) == 0)
-    {
-        fpga_sendData((u8 *)(cmdString + 15), length - 15);
-        PRINT("send to fpga: :");
-        LOG_BIN((u8 *)(cmdString + 15), length - 15);
-        return F_SUCCESS;
-    }
+    // if (strncmp((const char *)cmdString, "fpga send data: ", strlen("fpga send data: ")) == 0)
+    // {
+    //     fpga_sendData((u8 *)(cmdString + 15), length - 15);
+    //     PRINT("send to fpga: :");
+    //     LOG_BIN((u8 *)(cmdString + 15), length - 15);
+    //     return F_SUCCESS;
+    // }
 
-    LOG_ERROR("CMD error");
+    // LOG_ERROR("CMD error");
     return F_FAILED;
 }
 
 static int cmd_dds(const unsigned char *cmdString, unsigned short length)
 {
-    int rc = 0;
-    int temp = 0;
+    // int rc = 0;
+    // int temp = 0;
 
-    rc = sscanf((char *)cmdString, "dds set frequency %d", &temp);
-    if (rc == 1)
-    {
-        dds_waveSeting(temp, 0, SIN_WAVE, 0);
-        LOG_DEBUG("dds set frequency to %d", temp);
-        return F_SUCCESS;
-    }
+    // rc = sscanf((char *)cmdString, "dds set frequency %d", &temp);
+    // if (rc == 1)
+    // {
+    //     dds_waveSeting(temp, 0, SIN_WAVE, 0);
+    //     LOG_DEBUG("dds set frequency to %d", temp);
+    //     return F_SUCCESS;
+    // }
 
-    LOG_ERROR("CMD error");
+    // LOG_ERROR("CMD error");
     return F_FAILED;
 }
 

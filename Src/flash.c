@@ -5,17 +5,17 @@
 
 #include "log.h"
 
-#define SPI_CS_ENABLE HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET)
-#define SPI_CS_DISABLE HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET)
+#define SPI_CS_ENABLE HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13, GPIO_PIN_RESET)
+#define SPI_CS_DISABLE HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13, GPIO_PIN_SET)
 
-extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi2;
 extern IWDG_HandleTypeDef hiwdg;
 
 int flash_init(void)
 {
     u8 sendData[] = {RESET_ENABLE_CMD, RESET_MEMORY_CMD};
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     LOG_DEBUG("flash init");
@@ -28,8 +28,8 @@ int flash_isBusy(void)
     u8 status = 0;
     u8 sendData[] = {READ_STATUS_1};
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
-    HAL_SPI_Receive(&hspi1, &status, 1, 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
+    HAL_SPI_Receive(&hspi2, &status, 1, 50);
     SPI_CS_DISABLE;
 
     if ((status & W25Q128FV_FSR_BUSY) != 0x00)
@@ -46,7 +46,7 @@ int flash_writeEnable(void)
 {
     u8 sendData[] = {WRITE_ENABLE};
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
     while(L_TRUE == flash_isBusy()){}
 
@@ -57,7 +57,7 @@ int flash_writeDisable(void)
 {
     u8 sendData[] = {WRITE_DISABLE};
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     while(L_TRUE == flash_isBusy()){}
@@ -69,8 +69,8 @@ int flash_readID(u8 *ID)
 {
     u8 sendData[] = {DEVICE_ID, 0x00, 0x00, 0x00};
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
-    HAL_SPI_Receive(&hspi1, ID, 2, 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
+    HAL_SPI_Receive(&hspi2, ID, 2, 50);
     SPI_CS_DISABLE;
     return F_SUCCESS;
 }
@@ -87,8 +87,8 @@ int flash_read(u32 address, void *data, u16 length)
     sendData[3] = address & 0xff;
 
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
-    if(HAL_OK != HAL_SPI_Receive(&hspi1, pData, length, 1000))
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
+    if(HAL_OK != HAL_SPI_Receive(&hspi2, pData, length, 1000))
     {
         LOG_ERROR("flash read error");
         return F_FAILED;
@@ -123,8 +123,8 @@ int flash_write(u32 address, void *data, u16 length)
         flash_writeEnable();
 
         SPI_CS_ENABLE;
-        HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
-        if(HAL_OK != HAL_SPI_Transmit(&hspi1, pData, dataLen, 1000))
+        HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
+        if(HAL_OK != HAL_SPI_Transmit(&hspi2, pData, dataLen, 1000))
         {
             LOG_ERROR("flash write error");
             return F_FAILED;
@@ -156,7 +156,7 @@ int flash_eraseSector(u32 address)
     flash_writeEnable();
 
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     while(L_TRUE == flash_isBusy())
@@ -182,7 +182,7 @@ int flash_eraseBlock_32k(u32 address)
     flash_writeEnable();
 
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     while(L_TRUE == flash_isBusy())
@@ -208,7 +208,7 @@ int flash_eraseBlock_64k(u32 address)
     flash_writeEnable();
 
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     while(L_TRUE == flash_isBusy())
@@ -231,7 +231,7 @@ int flash_eraseChip(void)
     flash_writeEnable();
 
     SPI_CS_ENABLE;
-    HAL_SPI_Transmit(&hspi1, sendData, sizeof(sendData), 50);
+    HAL_SPI_Transmit(&hspi2, sendData, sizeof(sendData), 50);
     SPI_CS_DISABLE;
 
     while(L_TRUE == flash_isBusy())

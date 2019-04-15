@@ -75,8 +75,8 @@ int data_plusInputResult(Complex result);
 int data_plusOutputResult(Complex result);
 int data_resetInputResult(void);
 int data_resetOutputResult(void);
-u32 data_ntohl(u8 *data);
-u16 data_ntohs(u8 *data);
+u32 data_ntohl(const u8 *data);
+u16 data_ntohs(const u8 *data);
 int data_htonl(u32 num, u8 *data);
 int data_htons(u16 num, u8 *data);
 
