@@ -1,5 +1,7 @@
 #include "uart_fpga.h"
 
+#include <stdlib.h>
+
 #include "usart.h"
 #include "data.h"
 #include "log.h"
@@ -68,7 +70,25 @@ void parseAdData(u8 *input, const float *source)
 
     for (i = 0; i < 32; i++)
     {
-        result = computeAd(source[i]);
+        result = computeAd(source[i] + (rand() % 1000 - 500) * 0.0002);
+        low = result & 0xff;
+        high = result >> 8;
+        input[i * 2] = low;
+        input[i * 2 + 1] = high;
+    }
+}
+
+void parseOutputAdData(u8 *input, const float *source)
+{
+    int i;
+    // int j = 0;
+    u8 low = 0;
+    u8 high = 0;
+    u32 result = 0;
+
+    for (i = 0; i < 32; i++)
+    {
+        result = computeAd(source[i] / 2);
         low = result & 0xff;
         high = result >> 8;
         input[i * 2] = low;
@@ -88,7 +108,7 @@ int uart_fpga_inputSend(void)
 int uart_fpga_outputSend(void)
 {
     u8 outputSendData[64];
-    parseAdData(outputSendData, adOriginData);
+    parseOutputAdData(outputSendData, adOriginData);
     usart_transmit_data(&huart5, outputSendData, 64);
     // LOG_HEX(outputSendData, 64);
     return F_SUCCESS;

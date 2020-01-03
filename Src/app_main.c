@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
 
@@ -183,6 +185,7 @@ void app_main(void const * argument)
     LOG_DEBUG("task main start");
     spi_fpga_recvStart();
     spi_dds_recvStart();
+    srand(xTaskGetTickCount());
     while(1)
     {
         xQueueReceive(mainQueueHandle, &pMsg, portMAX_DELAY);
